@@ -5,13 +5,15 @@ const cssnano = require('gulp-cssnano');
 const imagemin = require('gulp-imagemin');
 const browserSync = require('browser-sync').create();
 const sourcemaps = require('gulp-sourcemaps');
+const sass = require('gulp-sass')(require('sass'));
 
 //sökvägar
 const files = {
     htmlPath: "src/**/*.html",
     cssPath: "src/css/*.css",
     jsPath: "src/js/*.js",
-    imagePath: "src/images/*"
+    imagePath: "src/images/*",
+    sassPath: "src/sass/*"
 }
 
 //html-task: kopierar över html
@@ -29,6 +31,14 @@ function cssTask() {
     .pipe(sourcemaps.write('../maps'))
     .pipe(dest('pub/css'))
     .pipe(browserSync.stream());
+}
+
+//sass-task: 
+function sassTask() {
+    return src(files.sassPath)
+        .pipe(sass().on("error", sass.logError))
+        .pipe(dest("pub/css"))
+        .pipe(browserSync.stream());
 }
 
 //js-task: kopierar, konktainerar och minifierar js
@@ -55,10 +65,10 @@ function watchTask() {
         server: "./pub"
     });
 
-    watch([files.htmlPath, files.cssPath, files.jsPath, files.imagePath], parallel(copyHTML, cssTask, jsTask, imageTask)).on('change',browserSync.reload);
+    watch([files.htmlPath, files.cssPath, files.jsPath, files.imagePath, files.sassPath], parallel(copyHTML, cssTask, jsTask, imageTask, sassTask)).on('change',browserSync.reload);
 }
 
 exports.default = series(
-    parallel(copyHTML, cssTask, jsTask, imageTask),
+    parallel(copyHTML, cssTask, sassTask, jsTask, imageTask),
     watchTask
 );
